@@ -242,7 +242,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
               type += `(${col.CHARACTER_MAXIMUM_LENGTH})`;
             }
             if (col.NUMERIC_PRECISION) {
-              type += `(${col.NUMERIC_PRECISION},${col.NUM_SCALE})`;
+              type += `(${col.NUMERIC_PRECISION},${col.NUMERIC_SCALE})`;
             }
             const nullable = col.IS_NULLABLE === "YES" ? "NULL" : "NOT NULL";
             return `  - ${col.COLUMN_NAME}: ${type} ${nullable}`;
@@ -326,6 +326,89 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     throw new Error(`Herramienta '${name}' no encontrada`);
   } catch (error) {
     console.error(`Error en herramienta ${name}:`, error.message);
+    return {
+      content: [
+        {
+          type: "text",
+          text: `❌ Error: ${error.message}`,
+        },
+      ],
+    };
+  }
+});
+              text: `❌ Tabla '${args.table}' no encontrada`,
+            },
+          ],
+        };
+      }
+
+      const columns = result.recordset
+        .map((col) => {
+          let type = col.DATA_TYPE;
+          if (col.CHARACTER_MAXIMUM_LENGTH) {
+            type += `(${col.CHARACTER_MAXIMUM_LENGTH})`;
+          }
+          if (col.NUMERIC_PRECISION) {
+            type += `(${col.NUMERIC_PRECISION},${col.NUMERIC_SCALE})`;
+          }
+          const nullable = col.IS_NULLABLE === "YES" ? "NULL" : "NOT NULL";
+          return `  - ${col.COLUMN_NAME}: ${type} ${nullable}`;
+        })
+        .join("\n");
+
+      return {
+        content: [
+          {
+            type: "text",
+            text: `📊 Estructura de '${args.table}':\n${columns}`,
+          },
+        ],
+      };
+    }
+
+    if (name === "query") {
+      const result = await pool.request().query(args.sql);
+      const rows = result.recordset;
+
+      if (rows.length === 0) {
+        return {
+          content: [
+            {
+              type: "text",
+              text: "ℹ️ La consulta no retornó resultados",
+            },
+          ],
+        };
+      }
+
+      return {
+        content: [
+          {
+            type: "text",
+            text: `✅ ${rows.length} fila(s) retornada(s):\n${JSON.stringify(
+              rows,
+              null,
+              2
+            )}`,
+          },
+        ],
+      };
+    }
+
+    if (name === "execute") {
+      const result = await pool.request().query(args.sql);
+      return {
+        content: [
+          {
+            type: "text",
+            text: `✅ Comando ejecutado exitosamente\nFilas afectadas: ${result.rowsAffected[0]}`,
+          },
+        ],
+      };
+    }
+
+    throw new Error(`Tool '${name}' no encontrada`);
+  } catch (error) {
     return {
       content: [
         {

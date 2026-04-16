@@ -1,0 +1,28 @@
+# Node.js dependencies
+node_modules/
+
+# Environment variables
+.env
+*.env
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Lock files (optional, if not tracking lockfiles intentionally)
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Claude / local config
+claude_desktop_config.json
+
+# Optional local build files
+dist/
+build/
